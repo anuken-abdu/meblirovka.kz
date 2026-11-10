@@ -124,7 +124,7 @@
     loadKb().then(function () {
       botMsg(kb.greeting, null, true);
       var chips = el('div', 'chips');
-      ['Что входит в меблировку?', 'Сколько стоит?', 'В каких районах работаете?', 'Вы делаете мебель?'].forEach(function (q) {
+      ['Делаете мебель на заказ?', 'Сколько стоит?', 'Есть гарантия?', 'Как вы работаете?'].forEach(function (q) {
         var b = el('button', 'chip', q); b.type = 'button'; b.addEventListener('click', function () { chips.remove(); ask(q); }); chips.appendChild(b);
       });
       $('.chat-b', chat).appendChild(chips);
@@ -156,7 +156,11 @@
   function localAnswer(q) {
     var n = norm(q), wa = 'Здравствуйте! Вопрос из чата: ' + q;
     if (/(цен|стои|сколько|прайс|бюджет|дорог|дешев)/.test(n)) return { t: kb.price + '\n\nОт чего зависит: ' + kb.price_factors.map(function (x) { return x.split(':')[0].toLowerCase(); }).join(', ') + '.', wa: 'Здравствуйте! Хочу узнать стоимость меблировки. ' + q };
-    if (/(изготов|сделает|делаете мебел|производ|на заказ|фабрик|столяр)/.test(n)) return { t: kb.not_manufacturing, wa: wa };
+    if (/(изготов|сделает|делаете мебел|производ|на заказ|фабрик|сами)/.test(n)) return { t: kb.about + '\n\nНаправления: ' + kb.services.filter(function (s) { return s.url.indexOf('/mebel-na-zakaz/') > -1 && s.url.split('/').length > 5; }).map(function (s) { return s.short.toLowerCase(); }).join(', ') + '.', wa: wa };
+    if (/(гарант|сервис|обслуж|ремонт мебел|сломал|регулир)/.test(n)) return { t: kb.promises.filter(function (p) { return /^(Гарантия|Сервис)/.test(p); }).join('\n'), wa: wa };
+    if (/(3d|3д|проект|дизайн|визуал|эскиз)/.test(n)) return { t: kb.promises[1] + '\n\n' + kb.steps.slice(0, 3).join('\n'), wa: wa };
+    if (/(материал|фасад|мдф|лдсп|шпон|массив|камен|фурнитур)/.test(n)) return { t: 'Работаем с материалами: ' + kb.materials.join(', ').toLowerCase() + '. Подбираем под задачу, нагрузку и бюджет и показываем в 3D-проекте до изготовления.', wa: wa };
+    if (/(замер|выезд)/.test(n)) return { t: kb.steps[0] + ' Договориться о замере проще всего в WhatsApp.', wa: 'Здравствуйте! Хочу записаться на замер' };
     var dHit = kb.districts.filter(function (x) { return n.indexOf(norm(x).slice(0, 6)) > -1; })[0];
     if (dHit || /(район|адрес|где вы|выезж|приезж|город)/.test(n)) return { t: (dHit ? 'Да, работаем в районе «' + dHit + '». ' : '') + 'Работаем во всех районах ' + (kb.city_gen || kb.city) + ': ' + kb.districts.join(', ') + '.', wa: wa };
     if (/(телефон|номер|связ|позвон|whatsapp|ватсап|график|время работ|часы)/.test(n)) return { t: 'Телефон: ' + kb.phone + '. ' + kb.hours + '. Быстрее всего — написать в WhatsApp и приложить фото или планировку.', wa: wa };
