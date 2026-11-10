@@ -14,7 +14,7 @@ A = ROOT / "assets"
 sys.path.insert(0, str(ROOT / "src"))
 import data as D  # noqa
 
-INK, PAPER, ACC, PRIMARY = "#1F2B27", "#F5F0E6", "#A3451D", "#2C4339"
+INK, PAPER, ACC, PRIMARY = "#1B1A18", "#F3EFE9", "#8A6A42", "#1E1D1B"
 
 def text_path(text, font_file, size):
     f = TTFont(font_file); gs = f.getGlyphSet(); cmap = f.getBestCmap()
@@ -33,16 +33,16 @@ def mark(stroke, bg, acc):
 
 def logos():
     """ВРЕМЕННЫЙ текстовый логотип до получения логотипа клиента."""
-    d, w = text_path(D.SITE["brand"], ROOT / "assets/fonts/lora-latin-600-normal.woff2", 30)
+    d, w = text_path(D.SITE["brand"], ROOT / "assets/fonts/cormorant-garamond-latin-600-normal.woff2", 32)
     W = w + 2
     for name, ink in (("logo.svg", INK), ("logo-light.svg", "#FFFFFF")):
-        svg = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -1 {W:.1f} 32" width="{W:.0f}" height="32">'
-               f'<path transform="translate(1 24)" fill="{ink}" d="{d}"/></svg>')
+        svg = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W:.1f} 30" width="{W:.0f}" height="30">'
+               f'<path transform="translate(1 23)" fill="{ink}" d="{d}"/></svg>')
         (A / name).write_text(svg, encoding="utf-8")
-    m, mw = text_path("M", ROOT / "assets/fonts/lora-latin-600-normal.woff2", 28)
+    m, mw = text_path("M", ROOT / "assets/fonts/cormorant-garamond-latin-600-normal.woff2", 34)
     icon = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><rect width="40" height="40" rx="8" fill="{PRIMARY}"/>'
             f'<path transform="translate({(40-mw)/2:.2f} 30)" fill="#FFFFFF" d="{m}"/></svg>')
-    print(f"logo.svg: {W:.0f}×32")
+    print(f"logo.svg: {W:.0f}×30")
     (A / "icon.svg").write_text(icon, encoding="utf-8")
     return icon
 
@@ -54,9 +54,11 @@ def render(page, html, w, h, out):
 
 def font_face():
     css = ""
-    for fam, f, wt in (("Lora", "lora-cyrillic-600-normal", 600), ("Golos", "golos-text-cyrillic-400-normal", 400), ("Golos", "golos-text-cyrillic-600-normal", 600)):
+    for fam, f, wt in (("Corm", "cormorant-garamond-cyrillic-500-normal", 500), ("Man", "manrope-cyrillic-400-normal", 400), ("Man", "manrope-cyrillic-600-normal", 600)):
         b = base64.b64encode((A / "fonts" / f"{f}.woff2").read_bytes()).decode()
         css += f"@font-face{{font-family:{fam};font-weight:{wt};src:url(data:font/woff2;base64,{b}) format('woff2')}}"
+    b = base64.b64encode((A / "fonts" / "cormorant-garamond-cyrillic-500-italic.woff2").read_bytes()).decode()
+    css += f"@font-face{{font-family:Corm;font-style:italic;font-weight:500;src:url(data:font/woff2;base64,{b}) format('woff2')}}"
     return css
 
 def main():
@@ -75,26 +77,22 @@ def main():
         im.save(A / "favicon.ico", sizes=[(16, 16), (32, 32), (48, 48)])
         # превью 1200×630 со стилями (шрифты встроены)
         css = f"""{font_face()}
-body{{margin:0;width:1200px;height:630px;background:{PAPER};font-family:Golos;color:{INK};display:flex;overflow:hidden;
-background-image:linear-gradient(#ECE4D4 1px,transparent 1px),linear-gradient(90deg,#ECE4D4 1px,transparent 1px);background-size:28px 28px}}
-.l{{width:600px;padding:64px 0 60px 70px;display:flex;flex-direction:column}}
-.l .lg svg{{height:44px;width:auto}}
-h1{{font:600 64px/1.08 Lora;margin:56px 0 22px;letter-spacing:-.02em}}
-p{{font-size:27px;line-height:1.35;color:#4B5651;margin:0}}
-.b{{margin-top:auto;font:600 24px Golos;color:{PRIMARY};display:flex;gap:14px;align-items:center}}
-.b i{{display:block;width:44px;height:2px;background:{ACC}}}
-.r{{flex:1;padding:50px 50px 50px 10px;display:flex;align-items:center}}
-.r .c{{background:#FBF8F2;border:1px solid #D5C9B4;border-radius:20px;padding:18px;width:100%}}
-.pl-floor{{fill:#FBF8F2}}.pl-f{{fill:{PAPER};stroke:{INK};stroke-width:1.6}}.pl-thin{{stroke-width:1;fill:none}}
-.pl-dash{{stroke-dasharray:4 5;stroke:#4B5651}}.pl-soft{{fill:#ECE4D4}}.pl-rug{{fill:none;stroke-dasharray:6 5;stroke:#4B5651}}
-.pl-acc{{fill:#E8C9B5}}.pl-acc2{{fill:{ACC};stroke:{ACC}}}.pl-w{{stroke:{INK};stroke-width:7;fill:none}}
-.pl-door{{stroke:#4B5651;stroke-width:1.3;fill:none}}.pl-win{{stroke:#FBF8F2;stroke-width:4}}.pl-d{{stroke:#4B5651;fill:none}}
-.pl-t{{font:600 13px Golos;fill:#4B5651;text-anchor:middle;letter-spacing:.06em}}"""
+body{{margin:0;width:1200px;height:630px;background:{PAPER};font-family:Man;color:{INK};display:flex;overflow:hidden}}
+.l{{width:640px;padding:62px 0 58px 72px;display:flex;flex-direction:column}}
+.l .lg svg{{height:34px;width:auto}}
+h1{{font:500 82px/1.0 Corm;margin:auto 0 26px;letter-spacing:-.01em}}
+h1 em{{font-style:italic;color:{ACC}}}
+p{{font-size:24px;line-height:1.4;color:#5B564F;margin:0}}
+.r{{flex:1;margin:40px 40px 40px 0;border:1px solid #D9D1C5;background:#FAF8F5;display:flex;align-items:center;justify-content:center;padding:36px}}
+.pl-floor{{fill:none}}.pl-f{{fill:none;stroke:{INK};stroke-width:1.1}}.pl-thin{{stroke-width:.7;fill:none}}
+.pl-dash{{stroke-dasharray:3 5;stroke:#5B564F}}.pl-soft{{fill:none}}.pl-rug{{fill:none;stroke-dasharray:2 4;stroke:#5B564F}}
+.pl-acc{{fill:rgba(138,106,66,.16);stroke:{ACC}}}.pl-acc2{{fill:{ACC};stroke:{ACC}}}.pl-w{{stroke:{INK};stroke-width:5;fill:none}}
+.pl-door{{stroke:#5B564F;stroke-width:.9;fill:none}}.pl-win{{stroke:#FAF8F5;stroke-width:3}}.pl-d{{stroke:{ACC};stroke-width:.8;fill:none}}
+.pl-t{{font:600 11px Man;fill:#5B564F;text-anchor:middle;letter-spacing:.18em;text-transform:uppercase}}"""
         html = f"""<html><head><style>{css}</style></head><body>
-<div class="l"><div class="lg">{logo}</div><h1>Меблировка квартир под ключ</h1>
-<p>Мебель, техника, текстиль и посуда. Подбор, доставка, сборка и расстановка.</p>
-<div class="b"><i></i>{D.SITE['city']}</div></div>
-<div class="r"><div class="c">{plan}</div></div></body></html>"""
+<div class="l"><div class="lg">{logo}</div><h1>Меблировка квартир <em>под ключ</em></h1>
+<p>Мебель на заказ, 3D-проект, монтаж и гарантия. {D.SITE['city']}</p></div>
+<div class="r">{plan}</div></body></html>"""
         render(pg, html, 1200, 630, A / "og.png")
         b.close()
     Image.open(A / "og.png").convert("RGB").save(A / "og.png", optimize=True)

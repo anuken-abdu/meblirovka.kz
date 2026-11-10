@@ -12,9 +12,9 @@
 src/data.py        все данные: телефон, услуги, районы, FAQ, статьи, теги
 src/build.py       генератор страниц, sitemap, robots, llms.txt, kb.json для чата
 src/styles.css     стили (встраиваются в каждую страницу при сборке)
-src/fonts.css      свои шрифты Lora + Golos Text (woff2, без Google Fonts)
+src/fonts.css      свои шрифты Cormorant Garamond + Manrope (woff2, без Google Fonts)
 src/app.js         меню, Назад/Наверх, форма → WhatsApp, ИИ-чат, конверсии
-src/plan.svg       иллюстрация первого экрана (план квартиры с мебелью)
+src/plan.svg       чертёж планировки на главной (пока нет фото)
 src/images.py      фото из assets/orig → WebP 480/800/1200 без EXIF (локально)
 src/og.py          логотипы SVG, фавиконы, иконки, превью og.png (локально)
 src/ads.py         файлы Google Ads → google-ads/ (локально)
@@ -44,18 +44,27 @@ VERCEL
 - Google Ads: файлы в google-ads/, порядок — в 6-teksty-i-nastroyki.txt.
 
 ЛОГОТИП (сейчас временный текстовый «Meblirovka»)
-- assets/logo.svg — для шапки, на светлом фоне. Горизонтальный, высота в шапке 32 px.
+- assets/logo.svg — для шапки, на светлом фоне. Горизонтальный, высота в шапке 30 px.
   Лучше SVG; если PNG — высотой не меньше 96 px (для чётких экранов), прозрачный фон.
 - assets/logo-light.svg — белый вариант для тёмного подвала.
 - Знак без текста (квадрат) — SVG или PNG 512×512: из него делаются фавикон,
   иконка на телефон и превью.
-- После замены: в src/data.py поправить LOGO["w"] (ширина при высоте 32), затем
+- После замены: в src/data.py поправить LOGO["w"] (ширина при высоте 30), затем
   python3 src/og.py перерисует превью og.png.
 
-ФОТО ДЛЯ СТРАНИЦ УСЛУГ (по одному на страницу)
-- assets/orig/pod-arendu.jpg      → /pod-arendu/
-- assets/orig/novostroyka.jpg     → /novostroyka/
-- assets/orig/komplektaciya.jpg   → /komplektaciya/
-- Горизонтальные 4:3, не меньше 1600×1200, JPG, без водяных знаков и надписей.
-- python3 src/images.py → WebP 480/800/1200 без EXIF и GPS в assets/img/,
-  python3 src/build.py — фото встанет рядом с заголовком. Нет файла — страница без фото.
+ФОТО (кладутся в assets/orig/, имя файла = ключ)
+Первый экран — вертикальные 4:5, не меньше 1600×2000, главное в центре кадра
+(на телефоне кадр обрезается до 4:3):
+- home.jpg            → главная
+- mebel-na-zakaz.jpg  → /mebel-na-zakaz/
+- novostroyka.jpg     → /novostroyka/
+- pod-arendu.jpg      → /pod-arendu/
+- komplektaciya.jpg   → /komplektaciya/
+Направления «Что делаем» — горизонтальные 4:3, не меньше 1200×900
+(фото встаёт в карточку на главной и в первый экран страницы направления):
+kuhni.jpg, shkafy.jpg, garderobnye.jpg, prihozhie.jpg, gostinye.jpg, spalni.jpg,
+detskie.jpg, kabinety.jpg, tumby-i-komody.jpg, mebel-dlya-sanuzla.jpg,
+dlya-biznesa.jpg, torgovaya-mebel.jpg
+Только реальные работы, без водяных знаков и надписей.
+Затем: python3 src/images.py (WebP 480/800/1200 без EXIF и GPS) и python3 src/build.py.
+Нет файла — на месте фото линейная иконка (на главной — чертёж планировки).
