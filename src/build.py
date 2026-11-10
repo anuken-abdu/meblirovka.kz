@@ -145,12 +145,9 @@ def faq_ld(faq):
         {"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in faq]}
 
 def logo_html(light=False):
-    return (f'<span class="logo-mark{" logo-mark--light" if light else ""}" aria-hidden="true">'
-            f'<svg viewBox="0 0 40 40"><rect x="3" y="3" width="34" height="34" rx="3" fill="none" stroke="currentColor" stroke-width="3"/>'
-            f'<path d="M3 26h9" stroke="var(--logo-bg)" stroke-width="4"/>'
-            f'<path d="M12 26a9 9 0 0 0-9-9" fill="none" stroke="currentColor" stroke-width="1.6"/>'
-            f'<rect x="18" y="9" width="13" height="16" rx="2" fill="var(--logo-acc)"/></svg></span>'
-            f'<span class="logo-text">{esc(S["brand"].lower())}</span>')
+    L = D.LOGO
+    f = "logo-light.svg" if light else "logo.svg"
+    return f'<img class="logo-img" src="/assets/{f}?v={VER}" width="{L["w"]}" height="{L["h"]}" alt="{esc(S["brand"])}">'
 
 def nav_html():
     drop = []
@@ -352,10 +349,17 @@ def form_html(selected=""):
 
 PLAN_SVG = (SRC / "plan.svg").read_text(encoding="utf-8")
 
-def page_hero(h1, lead, wa_text, points=None, plan=False):
+def photo_html(slug):
+    if slug not in D.PHOTOS or not (ASSETS / "img" / f"{slug}-800.webp").exists(): return ""
+    srcset = ", ".join(f"/assets/img/{slug}-{w}.webp {w}w" for w in (480, 800, 1200) if (ASSETS / "img" / f"{slug}-{w}.webp").exists())
+    return (f'<div class="hero-photo"><img src="/assets/img/{slug}-800.webp" srcset="{srcset}" '
+            f'sizes="(min-width:1024px) 560px, calc(100vw - 40px)" width="800" height="600" '
+            f'alt="{esc(D.PHOTOS[slug])}" fetchpriority="high" decoding="async"></div>')
+
+def page_hero(h1, lead, wa_text, points=None, plan=False, photo=""):
     pts = checklist(points, "checks hero-pts") if points else ""
-    art = f'<div class="hero-art" aria-hidden="true">{PLAN_SVG}</div>' if plan else ""
-    return f"""<section class="hero{' hero-plan' if plan else ' hero-in'}"><div class="wrap hero-grid">
+    art = f'<div class="hero-art" aria-hidden="true">{PLAN_SVG}</div>' if plan else photo
+    return f"""<section class="hero{' hero-plan' if plan else ' hero-in'}{' hero-ph' if photo else ''}"><div class="wrap hero-grid">
 <div class="hero-txt"><h1>{nb(h1)}</h1><p class="lead">{nb(lead)}</p>{cta_buttons(wa_text)}{pts}</div>{art}
 </div></section>"""
 
@@ -380,7 +384,7 @@ def build_home():
         f"Меблировка квартир под ключ {S['city_in']}",
         f"Обставляем квартиры {S['city_in']} под аренду и для жизни: подбираем мебель, технику, текстиль и посуду, закупаем, привозим, собираем и расставляем. Мебель не изготавливаем — подбираем готовую.",
         "Здравствуйте! Нужна меблировка квартиры под ключ",
-        ["Подбор, закупка, доставка, сборка", "Мебель, техника, текстиль, посуда", f"Все районы {S['city']}"], plan=True)
+        ["Подбор, закупка, доставка, сборка", "Мебель, техника, текстиль, посуда", f"Все районы {S['city_gen']}"], plan=True)
     body += f'<section class="sec" id="uslugi"><div class="wrap">{h2("Услуги", "Полная меблировка или только то, чего не хватает")}<ul class="cards cards-3">{cats}</ul></div></section>'
     body += f'<section class="sec sec-alt"><div class="wrap">{h2("Для кого")}<ul class="cards cards-4">{aud}</ul></div></section>'
     body += f'<section class="sec"><div class="wrap">{h2("Что входит в меблировку под ключ")}{incl}</div></section>'
@@ -401,7 +405,7 @@ def service_ld(name, desc, path):
 def build_category(c):
     p = cat_path(c)
     crumbs = [("Главная", "/"), (c["name"], p)]
-    body = page_hero(c["h1"], c["lead"], c["wa_text"])
+    body = page_hero(c["h1"], c["lead"], c["wa_text"], photo=photo_html(c["slug"]))
     body += f'<section class="sec"><div class="wrap">{h2("Выберите работу")}{cards_works(c)}</div></section>'
     body += f'<section class="sec sec-alt"><div class="wrap">{h2("Что входит")}{checklist(c["includes"], "checks checks-2")}</div></section>'
     body += factors_html(c["factors"])
@@ -436,34 +440,34 @@ def build_districts():
     p = "/rayony/"
     crumbs = [("Главная", "/"), ("Районы", p)]
     items = "".join(f'<li><a class="card card-link" href="/rayony/{d["slug"]}/">{icon("map-pin", "i card-i")}<span class="card-t">{esc(d["name"])}</span>{icon("caret-right", "i i-s card-arr")}</a></li>' for d in D.DISTRICTS)
-    body = page_hero(f"Меблировка квартир по районам {S['city']}",
-                     f"Меблируем квартиры во всех районах {S['city']}: выезжаем на замер, привозим мебель и технику, собираем и расставляем на месте.",
+    body = page_hero(f"Меблировка квартир по районам {S['city_gen']}",
+                     f"Меблируем квартиры во всех районах {S['city_gen']}: выезжаем на замер, привозим мебель и технику, собираем и расставляем на месте.",
                      "Здравствуйте! Нужна меблировка квартиры")
     body += f'<section class="sec"><div class="wrap">{h2("Районы")}<ul class="cards cards-links cards-4l">{items}</ul></div></section>'
     body += f'<section class="sec sec-alt"><div class="wrap">{h2("Услуги")}{svc_links()}</div></section>'
     body += form_html()
-    page(p, f"Меблировка квартир по районам {S['city']} | {S['brand']}",
-         f"Меблировка квартир под ключ во всех районах {S['city']}: Бостандыкский, Медеуский, Алмалинский, Ауэзовский и другие.",
+    page(p, f"Меблировка квартир по районам {S['city_gen']} | {S['brand']}",
+         f"Меблировка квартир под ключ во всех районах {S['city_gen']}: " + ", ".join(d["name"] for d in D.DISTRICTS) + ".",
          body, crumbs=crumbs)
     for d in D.DISTRICTS:
         dp = f"/rayony/{d['slug']}/"
         cr = [("Главная", "/"), ("Районы", p), (d["name"], dp)]
-        h1 = f"Меблировка квартир {d['in']} {S['city']}"
+        h1 = f"Меблировка квартир {d['in']} {S['city_gen']}"
         wa = f"Здравствуйте! Нужна меблировка квартиры, {d['name']} район"
         faq = [
-            (f"Работаете {d['in']}?", f"Да, выезжаем на замер и привозим мебель {d['in']} {S['city']}."),
+            (f"Работаете {d['in']}?", f"Да, выезжаем на замер и привозим мебель {d['in']} {S['city_gen']}."),
             ("Можно обставить квартиру без моего присутствия?", "Да, по ключам и с фото по ходу работ в WhatsApp."),
             ("Как узнать стоимость?", "Пришлите планировку или фото комнат в WhatsApp — назовём ориентир."),
         ]
         others = "".join(f'<li><a class="card card-link" href="/rayony/{x["slug"]}/">{icon("map-pin", "i card-i")}<span class="card-t">{esc(x["name"])}</span>{icon("caret-right", "i i-s card-arr")}</a></li>' for x in D.DISTRICTS if x is not d)
-        body = page_hero(h1, f"Меблировка квартир под ключ {d['in']} {S['city']}: подбор, закупка, доставка, сборка и расстановка мебели, техники и текстиля. {d['note']}", wa)
+        body = page_hero(h1, f"Меблировка квартир под ключ {d['in']} {S['city_gen']}: подбор, закупка, доставка, сборка и расстановка мебели, техники и текстиля. {d['note']}", wa)
         body += f'<section class="sec"><div class="wrap">{h2("Услуги " + d["in"])}{svc_links()}</div></section>'
         body += steps_html()
         body += faq_html(faq)
         body += f'<section class="sec"><div class="wrap">{h2("Другие районы")}<ul class="cards cards-links cards-4l">{others}</ul></div></section>'
         body += form_html()
-        page(dp, f"Меблировка квартир {d['in']} {S['city']} | {S['brand']}"[:70],
-             f"Меблировка квартир под ключ {d['in']} {S['city']}: мебель, техника, текстиль. Подбор, доставка, сборка, расстановка.",
+        page(dp, f"Меблировка квартир {d['in']} {S['city_gen']} | {S['brand']}"[:70],
+             f"Меблировка квартир под ключ {d['in']} {S['city_gen']}: мебель, техника, текстиль. Подбор, доставка, сборка, расстановка.",
              body, crumbs=cr, wa_text=wa, ld=[faq_ld(faq)])
 
 def build_prices():
@@ -563,7 +567,7 @@ def build_kb():
         for w in c["works"]:
             faq += [{"q": q, "a": a, "url": url_of(work_path(c, w))} for q, a in w["faq"]]
     kb = {
-        "brand": S["brand"], "city": S["city"], "city_in": S["city_in"], "phone": S["phone_display"], "tel": S["phone_tel"],
+        "brand": S["brand"], "city": S["city"], "city_gen": S["city_gen"], "city_in": S["city_in"], "phone": S["phone_display"], "tel": S["phone_tel"],
         "wa": S["wa"], "hours": S["hours_text"], "tagline": D.TAGLINE, "greeting": D.CHAT_GREETING,
         "not_manufacturing": "Мебель не изготавливаем, подбираем готовую: подбор, закупка, доставка, сборка, расстановка.",
         "price": "Цены на сайте не указаны: стоимость зависит от площади, количества комнат, уровня мебели и того, что уже есть в квартире. Пришлите планировку или фото в WhatsApp — назовём ориентир.",

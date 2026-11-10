@@ -32,14 +32,17 @@ def mark(stroke, bg, acc):
             f'<rect x="18" y="9" width="13" height="16" rx="2" fill="{acc}"/>')
 
 def logos():
-    d, w = text_path(D.SITE["brand"].lower(), ROOT / "assets/fonts/lora-cyrillic-600-normal.woff2", 30)
-    W = 40 + 10 + w + 2
-    for name, ink, bg in (("logo.svg", INK, PAPER), ("logo-light.svg", "#FFFFFF", INK)):
-        svg = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W:.1f} 40" width="{W:.0f}" height="40">'
-               f'{mark(ink, bg, ACC)}<path transform="translate(50 29)" fill="{ink}" d="{d}"/></svg>')
+    """ВРЕМЕННЫЙ текстовый логотип до получения логотипа клиента."""
+    d, w = text_path(D.SITE["brand"], ROOT / "assets/fonts/lora-latin-600-normal.woff2", 30)
+    W = w + 2
+    for name, ink in (("logo.svg", INK), ("logo-light.svg", "#FFFFFF")):
+        svg = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -1 {W:.1f} 32" width="{W:.0f}" height="32">'
+               f'<path transform="translate(1 24)" fill="{ink}" d="{d}"/></svg>')
         (A / name).write_text(svg, encoding="utf-8")
-    icon = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><rect width="40" height="40" rx="8" fill="{PAPER}"/>'
-            f'<g transform="translate(5 5) scale(.75)">{mark(INK, PAPER, ACC)}</g></svg>')
+    m, mw = text_path("M", ROOT / "assets/fonts/lora-latin-600-normal.woff2", 28)
+    icon = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><rect width="40" height="40" rx="8" fill="{PRIMARY}"/>'
+            f'<path transform="translate({(40-mw)/2:.2f} 30)" fill="#FFFFFF" d="{m}"/></svg>')
+    print(f"logo.svg: {W:.0f}×32")
     (A / "icon.svg").write_text(icon, encoding="utf-8")
     return icon
 
@@ -75,7 +78,7 @@ def main():
 body{{margin:0;width:1200px;height:630px;background:{PAPER};font-family:Golos;color:{INK};display:flex;overflow:hidden;
 background-image:linear-gradient(#ECE4D4 1px,transparent 1px),linear-gradient(90deg,#ECE4D4 1px,transparent 1px);background-size:28px 28px}}
 .l{{width:600px;padding:64px 0 60px 70px;display:flex;flex-direction:column}}
-.l .lg svg{{height:46px;width:auto}}
+.l .lg svg{{height:44px;width:auto}}
 h1{{font:600 64px/1.08 Lora;margin:56px 0 22px;letter-spacing:-.02em}}
 p{{font-size:27px;line-height:1.35;color:#4B5651;margin:0}}
 .b{{margin-top:auto;font:600 24px Golos;color:{PRIMARY};display:flex;gap:14px;align-items:center}}

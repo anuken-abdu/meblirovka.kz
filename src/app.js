@@ -1,4 +1,4 @@
-/* Обжито — меню, «Назад», «Наверх», форма, ИИ-чат. Без зависимостей. */
+/* Meblirovka — меню, «Назад», «Наверх», форма, ИИ-чат. Без зависимостей. */
 (function () {
   'use strict';
   var d = document, w = window, body = d.body;
@@ -158,7 +158,7 @@
     if (/(цен|стои|сколько|прайс|бюджет|дорог|дешев)/.test(n)) return { t: kb.price + '\n\nОт чего зависит: ' + kb.price_factors.map(function (x) { return x.split(':')[0].toLowerCase(); }).join(', ') + '.', wa: 'Здравствуйте! Хочу узнать стоимость меблировки. ' + q };
     if (/(изготов|сделает|делаете мебел|производ|на заказ|фабрик|столяр)/.test(n)) return { t: kb.not_manufacturing, wa: wa };
     var dHit = kb.districts.filter(function (x) { return n.indexOf(norm(x).slice(0, 6)) > -1; })[0];
-    if (dHit || /(район|адрес|где вы|выезж|приезж|город)/.test(n)) return { t: (dHit ? 'Да, работаем в районе «' + dHit + '». ' : '') + 'Работаем во всех районах ' + kb.city + ': ' + kb.districts.join(', ') + '.', wa: wa };
+    if (dHit || /(район|адрес|где вы|выезж|приезж|город)/.test(n)) return { t: (dHit ? 'Да, работаем в районе «' + dHit + '». ' : '') + 'Работаем во всех районах ' + (kb.city_gen || kb.city) + ': ' + kb.districts.join(', ') + '.', wa: wa };
     if (/(телефон|номер|связ|позвон|whatsapp|ватсап|график|время работ|часы)/.test(n)) return { t: 'Телефон: ' + kb.phone + '. ' + kb.hours + '. Быстрее всего — написать в WhatsApp и приложить фото или планировку.', wa: wa };
     if (/(этап|как работ|порядок|процесс|шаг)/.test(n)) return { t: 'Как работаем:\n' + kb.steps.join('\n'), wa: wa };
     var qs = stems(q); if (!qs.length) return null;

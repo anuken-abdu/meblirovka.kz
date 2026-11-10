@@ -1,8 +1,7 @@
-ЗАПУСК САЙТА «ОБЖИТО» — меблировка квартир под ключ (Алматы)
+ЗАПУСК САЙТА MEBLIROVKA — меблировка квартир под ключ (Астана)
 Разработка и продвижение: Anuken.kz
 
 ПЕРЕД ЗАПУСКОМ ЗАМЕНИТЬ В src/data.py
-- SITE: brand — если название другое (затем python3 src/og.py — перерисует логотип и превью)
 - SITE: gtm_id, aw_id, aw_label — теги Google (метку конверсии копировать текстом)
 - SITE: hours_text / hours_ld — график клиента
 - DISTRICTS: строки note — сверить микрорайоны
@@ -44,6 +43,19 @@ VERCEL
 - Проверка скорости живого сайта с тегами: https://www.anuken.kz/skorost.html
 - Google Ads: файлы в google-ads/, порядок — в 6-teksty-i-nastroyki.txt.
 
-ФОТО
-Положить реальные фото работ в assets/orig/ и запустить python3 src/images.py —
-появятся WebP без EXIF и GPS в assets/img/.
+ЛОГОТИП (сейчас временный текстовый «Meblirovka»)
+- assets/logo.svg — для шапки, на светлом фоне. Горизонтальный, высота в шапке 32 px.
+  Лучше SVG; если PNG — высотой не меньше 96 px (для чётких экранов), прозрачный фон.
+- assets/logo-light.svg — белый вариант для тёмного подвала.
+- Знак без текста (квадрат) — SVG или PNG 512×512: из него делаются фавикон,
+  иконка на телефон и превью.
+- После замены: в src/data.py поправить LOGO["w"] (ширина при высоте 32), затем
+  python3 src/og.py перерисует превью og.png.
+
+ФОТО ДЛЯ СТРАНИЦ УСЛУГ (по одному на страницу)
+- assets/orig/pod-arendu.jpg      → /pod-arendu/
+- assets/orig/novostroyka.jpg     → /novostroyka/
+- assets/orig/komplektaciya.jpg   → /komplektaciya/
+- Горизонтальные 4:3, не меньше 1600×1200, JPG, без водяных знаков и надписей.
+- python3 src/images.py → WebP 480/800/1200 без EXIF и GPS в assets/img/,
+  python3 src/build.py — фото встанет рядом с заголовком. Нет файла — страница без фото.
