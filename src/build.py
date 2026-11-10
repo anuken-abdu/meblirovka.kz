@@ -13,7 +13,7 @@ import data as D  # noqa: E402
 
 S = D.SITE
 BASE = f"https://www.{S['domain']}"
-VER = "2"
+VER = "3"
 ICON_DIR = ASSETS / "icons"
 CATS = D.CATEGORIES
 
@@ -200,7 +200,9 @@ def page(path, title, desc, body, *, crumbs=None, ld=None, wa_text=None, noindex
     ldjson = json.dumps({"@context": "https://schema.org", "@graph": graph}, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
     canon = url_of(path)
     lat, lon = S["geo_position"].split(";")
-    pre = f'\n<link rel="preload" as="image" href="{preload_img[0]}" imagesrcset="{preload_img[1]}" imagesizes="{preload_img[2]}" fetchpriority="high">' if preload_img else ""
+    if isinstance(preload_img, list): pre = "".join("\n" + x for x in preload_img)
+    elif preload_img: pre = f'\n<link rel="preload" as="image" href="{preload_img[0]}" imagesrcset="{preload_img[1]}" imagesizes="{preload_img[2]}" fetchpriority="high">'
+    else: pre = ""
     doc = f"""<!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -274,7 +276,7 @@ def photo(key, sizes):
     ws = [w for w in (480, 800, 1200) if (ASSETS / "img" / f"{key}-{w}.webp").exists()]
     srcset = ", ".join(f"/assets/img/{key}-{w}.webp {w}w" for w in ws)
     src = f"/assets/img/{key}-800.webp"
-    return (f'<img src="{src}" srcset="{srcset}" sizes="{sizes}" width="800" height="1000" alt="{esc(D.PHOTOS[key])}" fetchpriority="high" decoding="async">',
+    return (f'<img src="{src}" srcset="{srcset}" sizes="{sizes}" width="800" height="600" alt="{esc(D.PHOTOS[key])}" fetchpriority="high" decoding="async">',
             (src, srcset, sizes))
 
 def work_photo(w, sizes):
@@ -282,14 +284,14 @@ def work_photo(w, sizes):
     if not (ASSETS / "img" / f"{key}-800.webp").exists(): return "", None
     ws = [x for x in (480, 800, 1200) if (ASSETS / "img" / f"{key}-{x}.webp").exists()]
     srcset = ", ".join(f"/assets/img/{key}-{x}.webp {x}w" for x in ws)
-    return (f'<img src="/assets/img/{key}-800.webp" srcset="{srcset}" sizes="{sizes}" width="800" height="1000" alt="{esc(w["name"])} на заказ" loading="lazy" decoding="async">',
+    return (f'<img src="/assets/img/{key}-800.webp" srcset="{srcset}" sizes="{sizes}" width="800" height="600" alt="{esc(w["name"])} на заказ" loading="lazy" decoding="async">',
             (f"/assets/img/{key}-800.webp", srcset, sizes))
 
 def wd_grid(c):
     """«Что делаем»: сетка направлений, фото или линейная иконка."""
     items = []
     for w in c["works"]:
-        img, _ = work_photo(w, "(min-width:1024px) 30vw, (min-width:600px) 45vw, 100vw")
+        img, _ = work_photo(w, "(min-width:1024px) 30vw, (min-width:600px) 45vw, 64px")
         vis = f'<span class="wd-ph">{img}</span>' if img else f'<span class="wd-ic">{icon(w["icon"], "i")}</span>'
         items.append(f'<li><a class="wd{" wd-p" if img else ""}" href="{work_path(c, w)}">{vis}<h3>{esc(w["name"])}</h3><p>{nb(w["card"])}</p></a></li>')
     return '<ul class="wds">' + "".join(items) + "</ul>"
@@ -342,7 +344,15 @@ def promises_html():
     return f'<section class="sec sec-dark"><div class="wrap">{sec_head("За что мы отвечаем")}<ul class="proms">{items}</ul></div></section>'
 
 def materials_html():
-    sw = "".join(f'<li><span class="sw {cls}" aria-hidden="true"></span><span class="sw-n">{esc(n)}</span></li>' for cls, n in D.MATERIALS)
+    def sw_item(cls, n, key):
+        if (ASSETS / "img" / f"{key}-400.webp").exists():
+            ss = ", ".join(f"/assets/img/{key}-{w}.webp {w}w" for w in (400, 800) if (ASSETS / "img" / f"{key}-{w}.webp").exists())
+            vis = (f'<span class="sw sw-img"><img src="/assets/img/{key}-400.webp" srcset="{ss}" '
+                   f'sizes="(min-width:1024px) 15vw, (min-width:600px) 30vw, 45vw" width="400" height="400" alt="{esc(n)}" loading="lazy" decoding="async"></span>')
+        else:
+            vis = f'<span class="sw {cls}" aria-hidden="true"></span>'
+        return f'<li>{vis}<span class="sw-n">{esc(n)}</span></li>'
+    sw = "".join(sw_item(*m) for m in D.MATERIALS)
     return (f'<section class="sec"><div class="wrap mat">{sec_head("Отбор материалов", "Корпус, фасады, столешницы и фурнитуру подбираем под задачу, нагрузку и бюджет — и показываем в 3D-проекте до изготовления.")}'
             f'<ul class="sws">{sw}</ul></div></section>')
 
@@ -380,11 +390,33 @@ def accent_h1(text):
     return t
 
 # ── страницы ────────────────────────────────────────────────────────────────
+def hero_bg():
+    """Фон первого экрана главной: отдельные кадры для ПК и телефона. ('', None, None) если фото нет."""
+    def ws(key, sizes): return [w for w in sizes if (ASSETS / "img" / f"{key}-{w}.webp").exists()]
+    d, m = ws("hero-desktop", (1280, 1920, 2560)), ws("hero-mobile", (540, 810, 1080))
+    if not d or not m: return "", []
+    dset = ", ".join(f"/assets/img/hero-desktop-{w}.webp {w}w" for w in d)
+    mset = ", ".join(f"/assets/img/hero-mobile-{w}.webp {w}w" for w in m)
+    pic = (f'<picture class="hero-pic"><source media="(min-width:768px)" srcset="{dset}" sizes="100vw">'
+           f'<img src="/assets/img/hero-mobile-{m[len(m) // 2]}.webp" srcset="{mset}" sizes="100vw" width="1080" height="1920" '
+           f'alt="{esc(D.PHOTOS["hero"])}" fetchpriority="high" decoding="async"></picture>')
+    pre = [f'<link rel="preload" as="image" media="(min-width:768px)" imagesrcset="{dset}" imagesizes="100vw" fetchpriority="high">',
+           f'<link rel="preload" as="image" media="(max-width:767.98px)" imagesrcset="{mset}" imagesizes="100vw" fetchpriority="high">']
+    return pic, pre
+
 def build_home():
-    img, pre = photo("home", "(min-width:1024px) 46vw, calc(100vw - 40px)")
-    visual = img or f'<div class="plan-wrap" aria-hidden="true">{PLAN_SVG}</div>'
-    body = hero(accent_h1(f"Меблировка квартир под ключ {S['city_in']}"), D.ABOUT,
-                "Здравствуйте! Нужна меблировка квартиры под ключ", visual, "hero-home")
+    pic, pre_bg = hero_bg()
+    if pic:
+        wa = "Здравствуйте! Нужна меблировка квартиры под ключ"
+        body = f"""<section class="hero hero-bg">{pic}<div class="wrap hero-grid">
+<div class="hero-txt"><h1>{accent_h1(f"Меблировка квартир под ключ {S['city_in']}")}</h1><p class="lead">{nb(D.ABOUT)}</p>
+<div class="cta-row"><a class="btn btn-light btn-lg" {tel_attrs()}>{icon("phone")}Позвонить</a><a class="btn btn-wa btn-lg" {wa_attrs(wa)}>{icon("whatsapp-logo")}Написать в WhatsApp</a></div></div>
+</div></section>"""
+        pre = pre_bg
+    else:
+        body = hero(accent_h1(f"Меблировка квартир под ключ {S['city_in']}"), D.ABOUT,
+                    "Здравствуйте! Нужна меблировка квартиры под ключ", f'<div class="plan-wrap" aria-hidden="true">{PLAN_SVG}</div>', "hero-home")
+        pre = None
     mz = CATS[0]
     body += f'<section class="sec" id="chto-delaem"><div class="wrap">{sec_head("Что делаем", "Корпусная мебель любой сложности по размерам вашей квартиры. Выберите направление — ответим в WhatsApp.")}{wd_grid(mz)}</div></section>'
     body += f'<section class="sec sec-statement"><div class="wrap"><p class="statement">{nb(D.STATEMENT)}</p></div></section>'
@@ -539,7 +571,7 @@ def build_kb():
           "price": "Цены на сайте не указаны: стоимость считаем после замера и 3D-проекта, она зависит от объёма мебели, материалов, фурнитуры и наполнения. Пришлите планировку в WhatsApp — назовём ориентир.",
           "price_factors": [f"{t}: {d}" for t, d in D.PRICE_FACTORS],
           "promises": [f"{t}: {d}" for t, d in D.PROMISES],
-          "materials": [n for _, n in D.MATERIALS],
+          "materials": [m[1] for m in D.MATERIALS],
           "steps": [f"{t}: {d}" for t, d in D.STEPS],
           "districts": [d["name"] for d in D.DISTRICTS], "services": services, "faq": faq}
     txt = json.dumps(kb, ensure_ascii=False, separators=(",", ":"))

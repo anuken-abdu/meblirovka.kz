@@ -2,7 +2,7 @@
 """Логотипы SVG (текст в кривых), фавиконы, иконки и превью og.png 1200×630.
 Запускать локально (нужны fontTools, brotli, Pillow, Playwright): python3 src/og.py
 Результат кладётся в assets/ и коммитится — на Vercel этот скрипт не нужен."""
-import base64, io, sys
+import base64, io, re, sys
 from pathlib import Path
 from fontTools.ttLib import TTFont
 from fontTools.pens.svgPathPen import SVGPathPen
@@ -62,14 +62,14 @@ def font_face():
     return css
 
 def main():
-    icon = logos()
+    icon = (A / "icon.svg").read_text(encoding="utf-8")   # логотип и знак — клиентские файлы
     from playwright.sync_api import sync_playwright
     plan = (ROOT / "src/plan.svg").read_text(encoding="utf-8")
     logo = (A / "logo.svg").read_text(encoding="utf-8")
     with sync_playwright() as p:
         b = p.chromium.launch(); pg = b.new_page()
         # иконки
-        big = f'<html><body style="margin:0">{icon.replace("<svg ", "<svg width=512 height=512 ")}</body></html>'
+        big = f'<html><body style="margin:0">{re.sub(r"width=\"\d+\" height=\"\d+\"", "width=\"512\" height=\"512\"", icon, 1)}</body></html>'
         render(pg, big, 512, 512, A / "icon-512.png")
         im = Image.open(A / "icon-512.png").convert("RGBA")
         im.resize((192, 192), Image.LANCZOS).save(A / "icon-192.png")
@@ -79,7 +79,7 @@ def main():
         css = f"""{font_face()}
 body{{margin:0;width:1200px;height:630px;background:{PAPER};font-family:Man;color:{INK};display:flex;overflow:hidden}}
 .l{{width:640px;padding:62px 0 58px 72px;display:flex;flex-direction:column}}
-.l .lg svg{{height:34px;width:auto}}
+.l .lg svg{{height:52px;width:auto}}
 h1{{font:500 82px/1.0 Corm;margin:auto 0 26px;letter-spacing:-.01em}}
 h1 em{{font-style:italic;color:{ACC}}}
 p{{font-size:24px;line-height:1.4;color:#5B564F;margin:0}}
