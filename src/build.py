@@ -72,36 +72,33 @@ PLAN_SVG = (SRC / "plan.svg").read_text(encoding="utf-8")
 
 # ── <head>: теги Google ─────────────────────────────────────────────────────
 def head_tags():
+    """Тег Google и тег события-конверсии — как выдал Google Ads, сразу после <head>."""
     out = []
     if S["gtm_id"]:
-        g = S["gtm_id"]
-        out.append(f"""<!-- Google Tag Manager -->
-<script>(function(w,d,s,l,i){{w[l]=w[l]||[];w[l].push({{'gtm.start':
-new Date().getTime(),event:'gtm.js'}});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-}})(window,document,'script','dataLayer','{g}');</script>
-<!-- End Google Tag Manager -->""")
-    if S["aw_id"]:
-        a = S["aw_id"]
-        out.append(f"""<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id={a}"></script>
+        out.append(f"""<script async src="https://www.googletagmanager.com/gtm.js?id={S['gtm_id']}"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){{dataLayer.push(arguments);}}
   gtag('js', new Date());
-  gtag('config', '{a}');
 </script>""")
     if S["aw_id"] and S["aw_label"]:
-        out.append(f"""<!-- Event snippet for conversion page -->
+        # код Google + страховка: если ответ Google не пришёл за 800 мс, звонок всё равно начинается
+        out.append(f"""<!-- Event snippet for Интерактивные номера телефонов conversion page -->
 <script>
 function gtag_report_conversion(url) {{
   var done = false;
   var callback = function () {{
     if (done) return; done = true;
-    if (typeof(url) != 'undefined') {{ window.location = url; }}
+    if (typeof(url) != 'undefined') {{
+      window.location = url;
+    }}
   }};
-  gtag('event', 'conversion', {{'send_to': '{S["aw_id"]}/{S["aw_label"]}', 'event_callback': callback}});
+  gtag('event', 'conversion', {{
+      'send_to': '{S["aw_id"]}/{S["aw_label"]}',
+      'value': 1.0,
+      'currency': 'USD',
+      'event_callback': callback
+  }});
   setTimeout(callback, 800);
   return false;
 }}
@@ -111,9 +108,7 @@ function gtag_report_conversion(url) {{
     return "\n".join(out)
 
 def body_tags():
-    if not S["gtm_id"]: return ""
-    return (f'<noscript><iframe src="https://www.googletagmanager.com/ns.html?id={S["gtm_id"]}" '
-            f'height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>')
+    return ""
 
 # ── JSON-LD ─────────────────────────────────────────────────────────────────
 def org_ld():
